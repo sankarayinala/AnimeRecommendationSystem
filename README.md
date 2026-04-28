@@ -1,210 +1,227 @@
-# AnimeRecommendationSystem
-Anime Recommendation System is an AI-powered recommendation platform that combines collaborative filtering, content-based signals, hybrid ranking, Redis caching, FAISS/vector search, FastAPI, Streamlit, Docker, Kubernetes, and Prometheus-based observability. The goal is to provide fast, explainable anime recommendations with a production-style MLOps workflow.
+# Anime Recommendation System
+
+## Project Overview
+Anime Recommendation System is a hybrid recommendation platform that combines collaborative filtering, content-based ranking, Redis caching, FAISS/vector search, FastAPI, Streamlit, Docker, Kubernetes, and Prometheus observability.
 
 ## Architecture Summary
-The system follows an end-to-end flow: data ingestion and preprocessing, model training, artifact generation, API serving, Redis caching, UI rendering, and observability through Prometheus and logs. The backend exposes authentication, recommendation, health, metrics, and admin cache endpoints, while the Streamlit frontend handles user interaction and display.
+The system follows an end-to-end flow:
+1. Raw anime and rating data is processed into training artifacts.
+2. The model is trained and embeddings are saved.
+3. The FastAPI backend serves recommendations and authentication.
+4. Redis caches recommendation responses.
+5. Streamlit provides the user interface.
+6. Prometheus scrapes backend metrics for observability.
 
 ## Key Features
-- Hybrid recommendation logic with collaborative and content-based ranking.
-- Redis caching for fast repeat requests and cache invalidation.
-- FAISS/vector-search-style similarity workflow and ranking support.
+- Hybrid anime recommendations using collaborative and content-based signals.
 - JWT authentication for protected endpoints.
-- Prometheus metrics for request latency, cache behavior, pipeline performance, and readiness.
-- Docker and Kubernetes deployment manifests for backend, UI, Redis, and observability stack.
+- Redis-backed caching with user-level invalidation.
+- FAISS-based similarity search for fast nearest-neighbor lookup.
+- Prometheus metrics for latency, cache, and pipeline monitoring.
+- Docker and Kubernetes deployment support.
 
 ## Technology Stack
+- Python 3.8+
+- FastAPI
+- Streamlit
+- Redis
+- FAISS CPU
+- TensorFlow / Keras
+- Pandas, NumPy, scikit-learn, Joblib
+- Prometheus client libraries
+- Docker
+- Kubernetes
 
-* Python 3.8+
-* FastAPI and Uvicorn
-* Streamlit
-* Redis
-* FAISS CPU
-* TensorFlow / Keras
-* Pandas, NumPy, scikit-learn, Joblib
-* Prometheus client and prometheus-fastapi-instrumentator
-* Docker and Kubernetes
-
-Folder Structure
-api/ backend service, auth, cache, metrics, schemas, and server.
-
-config/ app settings and path configuration.
-
-core/ exceptions and shared core helpers.
-
-pipeline/ hybrid recommendation inference pipeline.
-
-src/ model/data processing and logging utilities.
-
-ui/ Streamlit application pages and UI helpers.
-
-utils/ shared helper functions.
-
-artifacts/ processed data, weights, and model files.
-
-*.yaml Kubernetes manifests for backend, UI, Redis, Prometheus, and Grafana datasource.
+## Folder Structure
+- `api/` FastAPI app, auth, cache, metrics, and schemas.
+- `config/` environment and path configuration.
+- `src/` preprocessing, model construction, and logging.
+- `pipeline/` recommendation inference pipeline.
+- `ui/` Streamlit UI pages and helpers.
+- `utils/` shared helper functions.
+- `artifacts/` raw, processed, model, and weight files.
+- `*.yaml` Kubernetes deployment manifests.
 
 ## Prerequisites
 - Python 3.8 or later
-- Redis available locally or in Kubernetes
-- Access to the processed training artifacts and model files
-- Docker and Kubernetes tooling for container deployment
-- A valid internet connection for Jikan poster lookups if you use the UI.
+- Docker
+- Kubernetes cluster or local Kubernetes environment
+- Redis
+- Access to the processed model artifacts
+- Internet access for poster lookups in the UI
 
 ## Environment Setup
-- Clone the repository
-- Create and activate a Python virtual environment
-- Install dependencies from requirements.txt
-- Ensure the artifacts/ directory contains the trained model and processed data
+1. Clone the repository.
+2. Create a virtual environment.
+3. Install dependencies.
+4. Generate or copy the processed artifacts into `artifacts/`.
+5. Start Redis.
+6. Start the backend API.
+7. Start the Streamlit UI.
 
 ## Python virtual environment setup
-**Linux/Unix:**
+```bash
 python -m venv .venv
 source .venv/bin/activate
-**On Windows:**
+```
+
+On Windows:
+```bash
 python -m venv .venv
 .venv\Scripts\activate
+```
 
-**Required environment variables**
-APIHOST — backend host name or service name.
-APIPORT — backend port, usually 8000.
-REDISHOST — Redis host, usually redis in Kubernetes.
-REDISPORT — Redis port, usually 6379.
-STREAMLITHOST — Streamlit bind address, usually 0.0.0.0.
-STREAMLITPORT — Streamlit port, usually 8501.
-LOGINUSER and LOGINPASSWORD — demo login values for the UI.
-ENVIRONMENT — development, staging, or production.
+## Required environment variables
+- `API_HOST`
+- `API_PORT`
+- `REDIS_HOST`
+- `REDIS_PORT`
+- `STREAMLIT_HOST`
+- `STREAMLIT_PORT`
+- `AUTH_TIMEOUT_SECONDS`
+- `READ_TIMEOUT_SECONDS`
+- `LOG_LEVEL`
+- `LOG_DIR`
 
 ## Dependency installation
+```bash
 pip install --upgrade pip
 pip install -r requirements.txt
+```
 
 ## Data preparation steps
-Place raw files such as animelist.csv, anime.csv, and animewithsynopsis.csv in the expected raw data path.
-Run the data processing pipeline to generate cleaned datasets and mappings.
-Verify that processed outputs such as ratingdf.parquet, animedf.parquet, synopsisdf.csv, and encoding artifacts are created.
+1. Place raw files in the expected raw artifact directory.
+2. Run the data processing pipeline.
+3. Verify the following files are generated:
+   - processed rating dataframe
+   - anime metadata dataframe
+   - synopsis export
+   - user and anime encoding mappings
+   - train/test arrays
 
 ## Model training steps
-python -m src.basemodel
+```bash
+python -m src.data_processing
+python -m src.training
+```
 
-This step should build or retrain the recommender network, generate training artifacts, and save model-related outputs into the configured artifact directories.
+If your training entry point differs, update the command to match the final trainer script in your repo.
 
-**Model inference steps**
-The recommendation pipeline reads trained artifacts, encoded mappings, and processed datasets from artifacts/ before generating ranked suggestions. The API service calls the hybrid pipeline and caches results in Redis for repeated requests.
+## Model inference steps
+The API reads the saved model, embeddings, and mapping artifacts from the `artifacts/` folder. The recommendation endpoint uses the trained artifacts and may cache results in Redis for repeated requests.
 
-**Running the API locally**
+## Running the API locally
+```bash
 uvicorn api.server:app --host 0.0.0.0 --port 8000 --reload
+```
 
 ## Testing authentication endpoint
+```bash
 curl -X POST "http://localhost:8000/auth/login" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=demo&password=demo"
-
+```
 
 ## Testing recommendation endpoint
-
-curl -X GET "http://localhost:8000/recommend/11880?userweight=0.6&contentweight=0.4&topk=10" \
+```bash
+curl -X GET "http://localhost:8000/recommend/11880?user_weight=0.6&content_weight=0.4&top_k=10" \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
 
 ## Docker image build steps
+```bash
 docker build -t anime-recommender-backend:latest .
+```
 
 ## Docker container run steps
+```bash
 docker run -p 8000:8000 \
-  -e REDISHOST=redis \
-  -e REDISPORT=6379 \
+  -e REDIS_HOST=redis \
+  -e REDIS_PORT=6379 \
   anime-recommender-backend:latest
+```
 
 ## Pushing Docker image
-
+```bash
 docker tag anime-recommender-backend:latest <registry>/anime-recommender-backend:latest
-docker push <registry>/anime-recommender-backend:latest  
+docker push <registry>/anime-recommender-backend:latest
+```
 
 ## Kubernetes deployment steps
+```bash
 kubectl apply -f redis.yaml
 kubectl apply -f backend-deployment.yaml
 kubectl apply -f ui-deployment.yaml
 kubectl apply -f prometheus-observability.yaml
 kubectl apply -f grafana-datasource.yaml
+```
 
 ## Redis deployment steps
+```bash
 kubectl apply -f redis.yaml
 kubectl get pods
 kubectl get svc
+```
 
 ## Prometheus/Grafana observability setup
-Apply the observability manifests, confirm Prometheus is running in the observability namespace, and add the Grafana datasource config map if Grafana is already installed. The backend is annotated for Prometheus scraping on /metrics, so the metrics endpoint should be visible once the service is reachable.
+Apply the observability manifests to the `observability` namespace and confirm Prometheus is reachable on the configured NodePort. Import the Grafana datasource config if Grafana is already deployed.
 
 ## Health check and metrics endpoint testing
+```bash
 curl http://localhost:8000/healthz
 curl http://localhost:8000/metrics
+```
 
 ## Troubleshooting common errors
-
-- Missing artifact files usually mean the training or preprocessing step did not finish successfully.
-- Redis connection errors usually point to a host or service-name mismatch.
-- Authentication failures usually indicate bad demo credentials or a missing bearer token.
-- Empty recommendations often mean the user has no history in the rating dataset or the input weights are too restrictive.
+- Missing artifact files usually mean preprocessing or training did not complete.
+- Redis connection errors usually mean the service name or port is incorrect.
+- Authentication failures usually indicate invalid demo credentials or a missing bearer token.
+- Empty recommendations usually mean the user has no history in the rating dataset.
 
 ## Git commit checklist
-Verify code formatting and imports.
-Confirm all docstrings and section comments are in place.
-Check that README.md matches the actual run commands.
-Validate Docker build and Kubernetes manifests.
-Ensure secrets are not committed to the repository.
+- Verify no secrets are committed.
+- Confirm docstrings and comments are added.
+- Check that commands match the actual file names.
+- Run a local smoke test for API and UI.
+- Validate Docker and Kubernetes manifests.
 
-## Future Enhancements
-  - Replace demo login with proper user management.
-  - Externalize all secrets to Kubernetes secrets or environment injection.
-  - Add automated tests for API, cache, and pipeline behavior.
-  - Add CI checks for formatting, linting, and smoke tests.
-  - Expand explainability with richer recommendation reasons.
+## Future enhancements
+- Replace demo authentication with real user management.
+- Move all secrets to environment variables or secret management.
+- Add automated tests for API, cache, and pipeline behavior.
+- Add CI linting and formatting checks.
+- Expand recommendation explanations.
 
 ## Deployment and testing commands
-
-### Virtual environment
+```bash
 python -m venv .venv
 source .venv/bin/activate
-
-### Install dependencies
 pip install -r requirements.txt
 
-### Train / process data
-python -m src.basemodel
-
-### Run backend
 uvicorn api.server:app --host 0.0.0.0 --port 8000 --reload
 
-### Build Docker image
 docker build -t anime-recommender-backend:latest .
-
-### Push image
 docker tag anime-recommender-backend:latest <registry>/anime-recommender-backend:latest
 docker push <registry>/anime-recommender-backend:latest
 
-### Apply Kubernetes manifests
 kubectl apply -f redis.yaml
 kubectl apply -f backend-deployment.yaml
 kubectl apply -f ui-deployment.yaml
 kubectl apply -f prometheus-observability.yaml
 kubectl apply -f grafana-datasource.yaml
 
-### Check pods and services
 kubectl get pods
 kubectl get svc
-
-### View logs
 kubectl logs deployment/backend
 kubectl logs deployment/ui
 
-### Port forwarding
 kubectl port-forward svc/backend-service 8000:8000
 kubectl port-forward svc/ui-service 8501:8501
 
-### Test auth
 curl -X POST "http://localhost:8000/auth/login" -H "Content-Type: application/x-www-form-urlencoded" -d "username=demo&password=demo"
-
-### Test recommendations
-curl -X GET "http://localhost:8000/recommend/11880?userweight=0.6&contentweight=0.4&topk=10" -H "Authorization: Bearer <ACCESS_TOKEN>"
+curl -X GET "http://localhost:8000/recommend/11880?user_weight=0.6&content_weight=0.4&top_k=10" -H "Authorization: Bearer <ACCESS_TOKEN>"
+curl http://localhost:8000/metrics
+```
 
 ### Test metrics
 curl http://localhost:8000/metrics
@@ -224,4 +241,15 @@ curl http://localhost:8000/metrics
 ### File: api/cache.py
 **Purpose:** Wraps Redis operations for storing recommendations, listing keys, reading TTLs, and invalidating user-specific cache entries.
 
+### File: api/models.py
+**Purpose:** Defines response schemas used by the API
+
+### File: api/server.py
+**Purpose:** Hosts the FastAPI application, health and metrics endpoints, login, recommendation generation, and admin cache operations.
+
+### File: api/metrics.py
+**Purpose:** Defines all Prometheus counters, gauges, and histograms used by the API and recommendation pipeline
+
+### File: ui/app.py
+**Purpose:** Provides the Streamlit user interface for login, search, recommendation requests, and recommendation display
 
