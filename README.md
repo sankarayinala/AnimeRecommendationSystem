@@ -174,37 +174,54 @@ python -m src.basemodel
 ### Run backend
 uvicorn api.server:app --host 0.0.0.0 --port 8000 --reload
 
-# Build Docker image
+### Build Docker image
 docker build -t anime-recommender-backend:latest .
 
-# Push image
+### Push image
 docker tag anime-recommender-backend:latest <registry>/anime-recommender-backend:latest
 docker push <registry>/anime-recommender-backend:latest
 
-# Apply Kubernetes manifests
+### Apply Kubernetes manifests
 kubectl apply -f redis.yaml
 kubectl apply -f backend-deployment.yaml
 kubectl apply -f ui-deployment.yaml
 kubectl apply -f prometheus-observability.yaml
 kubectl apply -f grafana-datasource.yaml
 
-# Check pods and services
+### Check pods and services
 kubectl get pods
 kubectl get svc
 
-# View logs
+### View logs
 kubectl logs deployment/backend
 kubectl logs deployment/ui
 
-# Port forwarding
+### Port forwarding
 kubectl port-forward svc/backend-service 8000:8000
 kubectl port-forward svc/ui-service 8501:8501
 
-# Test auth
+### Test auth
 curl -X POST "http://localhost:8000/auth/login" -H "Content-Type: application/x-www-form-urlencoded" -d "username=demo&password=demo"
 
-# Test recommendations
+### Test recommendations
 curl -X GET "http://localhost:8000/recommend/11880?userweight=0.6&contentweight=0.4&topk=10" -H "Authorization: Bearer <ACCESS_TOKEN>"
 
-# Test metrics
+### Test metrics
 curl http://localhost:8000/metrics
+
+
+# Deep dive into coding :
+
+### File: src/data_processing.py
+**Purpose:** Cleans rating and anime metadata, encodes IDs, creates train/test splits, and saves all processed artifacts for training and inference.
+
+### File: src/base_model.py
+**Purpose:** Builds the neural collaborative filtering model used for anime recommendation training and inference.
+
+### File: api/auth.py
+**Purpose:** Creates and validates JWT access tokens for protected API endpoints.
+
+### File: api/cache.py
+**Purpose:** Wraps Redis operations for storing recommendations, listing keys, reading TTLs, and invalidating user-specific cache entries.
+
+
