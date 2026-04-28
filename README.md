@@ -100,3 +100,111 @@ curl -X POST "http://localhost:8000/auth/login" \
   -d "username=demo&password=demo"
 
 
+## Testing recommendation endpoint
+
+curl -X GET "http://localhost:8000/recommend/11880?userweight=0.6&contentweight=0.4&topk=10" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+
+## Docker image build steps
+docker build -t anime-recommender-backend:latest .
+
+## Docker container run steps
+docker run -p 8000:8000 \
+  -e REDISHOST=redis \
+  -e REDISPORT=6379 \
+  anime-recommender-backend:latest
+
+## Pushing Docker image
+
+docker tag anime-recommender-backend:latest <registry>/anime-recommender-backend:latest
+docker push <registry>/anime-recommender-backend:latest  
+
+## Kubernetes deployment steps
+kubectl apply -f redis.yaml
+kubectl apply -f backend-deployment.yaml
+kubectl apply -f ui-deployment.yaml
+kubectl apply -f prometheus-observability.yaml
+kubectl apply -f grafana-datasource.yaml
+
+## Redis deployment steps
+kubectl apply -f redis.yaml
+kubectl get pods
+kubectl get svc
+
+## Prometheus/Grafana observability setup
+Apply the observability manifests, confirm Prometheus is running in the observability namespace, and add the Grafana datasource config map if Grafana is already installed. The backend is annotated for Prometheus scraping on /metrics, so the metrics endpoint should be visible once the service is reachable.
+
+## Health check and metrics endpoint testing
+curl http://localhost:8000/healthz
+curl http://localhost:8000/metrics
+
+## Troubleshooting common errors
+
+- Missing artifact files usually mean the training or preprocessing step did not finish successfully.
+- Redis connection errors usually point to a host or service-name mismatch.
+- Authentication failures usually indicate bad demo credentials or a missing bearer token.
+- Empty recommendations often mean the user has no history in the rating dataset or the input weights are too restrictive.
+
+## Git commit checklist
+Verify code formatting and imports.
+Confirm all docstrings and section comments are in place.
+Check that README.md matches the actual run commands.
+Validate Docker build and Kubernetes manifests.
+Ensure secrets are not committed to the repository.
+
+## Future Enhancements
+  - Replace demo login with proper user management.
+  - Externalize all secrets to Kubernetes secrets or environment injection.
+  - Add automated tests for API, cache, and pipeline behavior.
+  - Add CI checks for formatting, linting, and smoke tests.
+  - Expand explainability with richer recommendation reasons.
+
+## Deployment and testing commands
+
+# Virtual environment
+python -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Train / process data
+python -m src.basemodel
+
+# Run backend
+uvicorn api.server:app --host 0.0.0.0 --port 8000 --reload
+
+# Build Docker image
+docker build -t anime-recommender-backend:latest .
+
+# Push image
+docker tag anime-recommender-backend:latest <registry>/anime-recommender-backend:latest
+docker push <registry>/anime-recommender-backend:latest
+
+# Apply Kubernetes manifests
+kubectl apply -f redis.yaml
+kubectl apply -f backend-deployment.yaml
+kubectl apply -f ui-deployment.yaml
+kubectl apply -f prometheus-observability.yaml
+kubectl apply -f grafana-datasource.yaml
+
+# Check pods and services
+kubectl get pods
+kubectl get svc
+
+# View logs
+kubectl logs deployment/backend
+kubectl logs deployment/ui
+
+# Port forwarding
+kubectl port-forward svc/backend-service 8000:8000
+kubectl port-forward svc/ui-service 8501:8501
+
+# Test auth
+curl -X POST "http://localhost:8000/auth/login" -H "Content-Type: application/x-www-form-urlencoded" -d "username=demo&password=demo"
+
+# Test recommendations
+curl -X GET "http://localhost:8000/recommend/11880?userweight=0.6&contentweight=0.4&topk=10" -H "Authorization: Bearer <ACCESS_TOKEN>"
+
+# Test metrics
+curl http://localhost:8000/metrics
