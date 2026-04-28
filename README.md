@@ -1,4 +1,4 @@
-## AnimeRecommendationSystem
+# AnimeRecommendationSystem
 Anime Recommendation System is an AI-powered recommendation platform that combines collaborative filtering, content-based signals, hybrid ranking, Redis caching, FAISS/vector search, FastAPI, Streamlit, Docker, Kubernetes, and Prometheus-based observability. The goal is to provide fast, explainable anime recommendations with a production-style MLOps workflow.
 
 ## Architecture Summary
@@ -161,17 +161,17 @@ Ensure secrets are not committed to the repository.
 
 ## Deployment and testing commands
 
-# Virtual environment
+### Virtual environment
 python -m venv .venv
 source .venv/bin/activate
 
-# Install dependencies
+### Install dependencies
 pip install -r requirements.txt
 
-# Train / process data
+### Train / process data
 python -m src.basemodel
 
-# Run backend
+### Run backend
 uvicorn api.server:app --host 0.0.0.0 --port 8000 --reload
 
 # Build Docker image
