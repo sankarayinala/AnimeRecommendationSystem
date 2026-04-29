@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+  namespace: default
+  labels:
+    app: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ui
+  template:
+    metadata:
+      labels:
+        app: ui
+    spec:
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        nameservers:
+          - 10.96.0.10
+        searches:
+          - default.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+      containers:
+        - name: ui
+          image: 172.22.174.102:5000/mlops-ui:v10
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8501
+          env:
+            - name: API_HOST
+              value: "backend-service"
+            - name: API_PORT
+              value: "8000"
+            - name: REDIS_HOST
+              value: "redis"
+            - name: STREAMLIT_HOST
+              value: "0.0.0.0"
+            - name: STREAMLIT_PORT
+              value: "8501"
+            - name: ENVIRONMENT
+              value: "production"
+            - name: AUTH_TIMEOUT_SECONDS
+              value: "10"
+            - name: READ_TIMEOUT_SECONDS
+              value: "180"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 8
+          livenessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 8
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ui-service
+  namespace: default
+  labels:
+    app: ui
+spec:
+  selector:
+    app: ui
+  ports:
+    - name: http
+      port: 8501
+      targetPort: 8501
+      nodePort: 30501
+  type: NodePort
