@@ -266,3 +266,11 @@ curl http://localhost:8000/metrics
 
 ### Kubernetes and Docker files
 **Purpose:** Define container images, service exposure, Redis deployment, backend deployment, and Prometheus/Grafana observability resources
+
+
+# Architecture ( Production grade - Containerized)
+
+<img width="1202" height="579" alt="image" src="https://github.com/user-attachments/assets/3c8c0780-e614-43d3-9507-c93b37884699" />
+
+<img width="1257" height="1199" alt="image" src="https://github.com/user-attachments/assets/69294033-66d7-4ed8-a9dd-cf270c375f4b" />
+
