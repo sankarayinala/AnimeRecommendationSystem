@@ -236,7 +236,7 @@ curl http://localhost:8000/metrics
 **Purpose:** Builds the neural collaborative filtering model used for anime recommendation training and inference.
 
 ### File: api/auth.py
-**Purpose:** Creates and validates JWT access tokens for protected API endpoints.
+**Purpose:** Creates and validates JWT access tokens for protected API endpoints. 
 
 ### File: api/cache.py
 **Purpose:** Wraps Redis operations for storing recommendations, listing keys, reading TTLs, and invalidating user-specific cache entries.
