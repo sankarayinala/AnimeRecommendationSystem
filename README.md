@@ -253,3 +253,16 @@ curl http://localhost:8000/metrics
 ### File: ui/app.py
 **Purpose:** Provides the Streamlit user interface for login, search, recommendation requests, and recommendation display
 
+### File: ui/utils_ui.py
+**Purpose:** Supplies reusable Streamlit UI components for anime cards and explanation display.
+
+### File: ui/jikan_client.py
+**Purpose:** Fetches anime poster URLs from the Jikan API using MAL IDs.
+
+### File: pipeline/prediction_pipeline.py
+**Purpose:** Runs the full recommendation inference flow, including loading cached artifacts, fetching similar users, scoring candidates, applying MMR diversification, and returning explanations.
+
+
+
+### Kubernetes and Docker files
+**Purpose:** Define container images, service exposure, Redis deployment, backend deployment, and Prometheus/Grafana observability resources
