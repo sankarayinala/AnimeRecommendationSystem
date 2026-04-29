@@ -274,3 +274,7 @@ curl http://localhost:8000/metrics
 
 <img width="1257" height="1199" alt="image" src="https://github.com/user-attachments/assets/69294033-66d7-4ed8-a9dd-cf270c375f4b" />
 
+<img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/e2eb618d-9cff-4b93-8b6a-d4cd261d2aa8" />
+
+<img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/5cce26e5-f34a-454d-a5a2-21ee95ee93cb" />
+
